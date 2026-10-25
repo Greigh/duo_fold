@@ -157,18 +157,3 @@ October 2026, with app-specific code removed: theme tokens replaced
 with theme defaults, the settings sync hook dropped, and comments
 lightly edited for style. Logic is unchanged. MIT license, copyright
 Greigh Studios.
-
-## Before publishing
-
-- Confirm the `duo_fold` name on pub.dev (a web search surfaced no
-  existing package under that name, but that is not a registry check).
-- Dependency versions are already aligned with Sensecast 1.2.1+122
-  (checked against the Mac checkout): `flutter_riverpod` ^3.0.0,
-  `shared_preferences` ^2.5.5, `foldable` ^1.0.5. Lint parity, if you
-  want it, is `flutter_lints` ^6.0.0; Sensecast's own `sensecast_lints`
-  package is local-only and not portable.
-- `repository` and `homepage` point at
-  https://github.com/Greigh/duo_fold (added 2026-10-25).
-- Run `flutter analyze` and `flutter test` on a machine with the
-  Flutter SDK. Verified 2026-10-25 on a Mac (Flutter 3.47.7, Homebrew):
-  analyze clean, all 27 ported tests passed.

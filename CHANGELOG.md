@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.1 - 2026-10-25
+
+- Remove the pre-publish checklist from the README (docs only, no code
+  changes).
+
 ## 0.1.0 - 2026-10-25
 
 - Initial extraction from Sensecast (greighstudios/Sensecast, main).

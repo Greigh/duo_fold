@@ -2,7 +2,7 @@ name: duo_fold
 description: "Fold-aware layout for Apple's iPhone Duo in Flutter: pose derivation, split panes, and fold-confined sheets and dialogs, built on package:foldable."
 repository: https://github.com/Greigh/duo_fold
 homepage: https://github.com/Greigh/duo_fold
-version: 0.1.0
+version: 0.1.1
 environment:
   sdk: ^3.13.0
   flutter: ">=3.47.0"
