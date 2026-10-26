@@ -1,5 +1,4 @@
-import 'package:duo_fold/src/duo_fold_state.dart';
-import 'package:duo_fold/src/fold_layout.dart';
+import 'package:duo_fold/duo_fold.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -55,7 +54,7 @@ void main() {
   });
 
   test('narrow regular-class window defeats a vertical split', () {
-    // A windowed resize under ~600pt keeps 'regular': panes would be
+    // A windowed resize under ~600pt keeps 'regular' — panes would be
     // unreadably thin, so the width gate keeps it single.
     expect(mode(_book, width: 599), FoldMode.single);
     const flat = DuoFoldState(
@@ -84,12 +83,14 @@ void main() {
     expect(mode(flat, bookSplitEnabled: false), FoldMode.single);
   });
 
-  test('flat pose without a vertical division → single', () {
+  test('flat pose + missing division still splits (band is synthesised)', () {
+    // Region reports lag the hinge on real hardware by seconds — a Duo
+    // that knows it folds must not flash single while the band resolves.
     const flatNoDivision = DuoFoldState(
       isDuo: true,
       hingeStatus: DuoHingeStatus.fullyOpen,
     );
-    expect(mode(flatNoDivision), FoldMode.single);
+    expect(mode(flatNoDivision), FoldMode.splitVertical);
     const flatHorizontalDivision = DuoFoldState(
       isDuo: true,
       hingeStatus: DuoHingeStatus.fullyOpen,
@@ -130,6 +131,17 @@ void main() {
         const Size(951, 669),
       ),
       isNull,
+    );
+  });
+
+  test('clippedDivision centres a synthesised band on a division-less Duo', () {
+    const flatNoDivision = DuoFoldState(
+      isDuo: true,
+      hingeStatus: DuoHingeStatus.fullyOpen,
+    );
+    expect(
+      FoldLayout.clippedDivision(flatNoDivision, const Size(951, 669)),
+      const Rect.fromLTWH(455.5, 0, 40, 669),
     );
   });
 

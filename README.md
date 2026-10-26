@@ -25,13 +25,27 @@ bridge layer is the one place that changes.
 - **Layout model** (`FoldLayout`, `FoldMode`): pure functions. Book
   splits vertically, on-table splits horizontally, propped goes to a
   glance presentation (or a horizontal split if glance is off), flat
-  with a surviving vertical division keeps the two-pane treatment.
+  with a surviving vertical division keeps the two-pane treatment, and
+  flat with a missing division splits too: `clippedDivision`
+  synthesises a centred 40pt band while the region report lags the
+  hinge. Only a horizontal band degrades flat to single.
   Splits are gated on a 600pt minimum width and defeated by a compact
   horizontal size class (Split View's 469pt pane).
 - **Riverpod bridge** (`duoFoldProvider`, `duoFoldForLayout`): a stream
   of fold states, iOS-gated, with a layout-granularity reader that
   rebuilds on pose, division, occlusion, size class, and hinge status,
-  but not on raw hinge-angle ticks during a sweep.
+  but not on raw hinge-angle ticks during a sweep. The provider never
+  gates on `isFoldable`: it tracks whether each verdict is settled
+  (`foldSettled`), seeds `isDuo` from a cached settled verdict or a
+  known-foldable machine id, and holds back unsettled snapshots that
+  would regress a seeded device. The machine-id seed needs the app's
+  native side to answer `machineIdentifier` on the bridge's device
+  channel (Sensecast's AppDelegate does this over
+  `com.weatherapp/device`), or override `DuoFoldBridge.machineIdentifier`.
+- **Startup gate** (`FoldStartupGate`): holds an app-supplied splash
+  (mirror your native launch screen) up to 1500ms until the fold
+  verdict settles, so the first frame never flashes single-pane on a
+  Duo that is still answering. A seeded Duo opens immediately.
 - **Split view** (`FoldSplitView`): primary/secondary panes positioned
   around the clipped division, with RTL mirroring on vertical folds and
   a primary-only fallback when no usable division overlaps the window.
@@ -124,13 +138,28 @@ package). The short version:
 8. **RTL mirrors vertical folds.** The primary pane leads on the
    physical right. Every pane computation in this package mirrors, and
    your content should too.
+9. **Do not gate on isFoldable before listening.** The first snapshot
+   can answer while the hinge interaction is still settling, and
+   gating on it returns before the real answer arrives. Listen to the
+   stream, and treat a verdict as settled once supportLevel leaves
+   unknown.
+10. **Seed the first frame.** A first launch flashes single-pane
+    unless you seed it from a cached settled verdict or the hardware
+    model, and hold back unsettled snapshots that would regress a
+    seeded device until a settled verdict lands. The seed is a hint,
+    not an answer, which is why `foldSettled` is kept out of `==` and
+    the layout signature.
+11. **Synthesise the band when the region report lags.** The crease is
+    physically centred, so a centred 40pt band is a safe stand-in
+    while the real division resolves. Panes only refine if the real
+    band disagrees.
 
 ## Simulator-only caveat
 
 Everything here was verified on the iPhone Duo simulator (iOS 27.1
 runtime), not on hardware. In particular, these are unverified on a
 physical device: the 150 degree on-table threshold, real hinge-angle
-behavior across the sweep, crease occlusion, the under-display camera,
+behavior across the sweep, hinge-settling time on first launch, crease occlusion, the under-display camera,
 true Split View on the inner display, StandBy, inner-island Live
 Activities, and glance auto-present cadence. Do not present this package
 as hardware verified. If you test on hardware, the measurements the

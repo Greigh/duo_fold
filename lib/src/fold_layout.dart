@@ -26,6 +26,13 @@ abstract final class FoldLayout {
   /// resizes that keep the regular size class.
   static const double minSplitVerticalWidth = 600;
 
+  /// The synthesised division band's width in logical pixels. Used when
+  /// the region report lags the hinge (by seconds on real hardware, so a
+  /// Duo that knows it folds must not flash single while the band
+  /// resolves). The crease is physically centred, so panes only refine
+  /// if the real band disagrees.
+  static const double synthesisedBandWidth = 40;
+
   /// Resolves the fold mode for [fold] at [width] logical pixels.
   /// [horizontalCompact] is the UIKit horizontal size class being compact
   /// (Split View's 469 lp pane). It defeats splits even when a clipped
@@ -51,12 +58,13 @@ abstract final class FoldLayout {
       case DuoPose.flat:
         // Fully open still reports the crease band. Split around it like
         // the book pose so the inner display keeps its two-pane treatment.
-        // A missing or horizontal band degrades to a single canvas.
+        // A missing band also splits: the band is synthesised by
+        // [clippedDivision] when the region report lags the hinge. Only
+        // a horizontal band degrades flat to single.
         final division = fold.divisionRegion;
         return bookSplitEnabled &&
                 verticalSplit &&
-                division != null &&
-                division.height > division.width
+                (division == null || division.height > division.width)
             ? FoldMode.splitVertical
             : FoldMode.single;
       case DuoPose.unsupported:
@@ -67,9 +75,16 @@ abstract final class FoldLayout {
 
   /// The division band intersected with the window. A Split View pane can
   /// contain only part of the hinge. Null when nothing usable overlaps.
+  /// When the division has not been reported yet on a Duo, synthesises a
+  /// centred band of [synthesisedBandWidth]: the crease is physically
+  /// centred, so panes only refine if the real band disagrees.
   static Rect? clippedDivision(DuoFoldState fold, Size windowSize) {
     final division = fold.divisionRegion;
-    if (division == null) return null;
+    if (division == null) {
+      if (!fold.isDuo) return null;
+      final left = (windowSize.width - synthesisedBandWidth) / 2;
+      return Rect.fromLTWH(left, 0, synthesisedBandWidth, windowSize.height);
+    }
     final clipped = division.intersect(Offset.zero & windowSize);
     return clipped.isEmpty ? null : clipped;
   }

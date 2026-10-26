@@ -326,3 +326,37 @@ in the order the community would feel them:
   that hinge readings remain unverified against hardware.
 - Flutter engine: issue #192515 (populate displayFeatures on iOS,
   open) and draft PR #193025 (embedder-side implementation).
+
+## 8. 0.1.2 sync (2026-10-26): what Sensecast changed after 0.1.1
+
+- Sensecast's model/provider split (pure model under `core/layout`,
+  bridge + provider under `presentation/state`) mirrors the package's
+  existing `duo_fold_state.dart` / `duo_fold_bridge.dart` split, so no
+  restructure was needed here; only contents changed.
+- Settled verdicts (`foldSettled`, deliberately outside `==`,
+  `hashCode`, and the layout signature), no `isFoldable` pre-gate,
+  seeding from a cached settled verdict (`duo_known_foldable`) or the
+  `iPhone19,4` machine id, hold-back of unsettled regressions, and a
+  settled-unsupported fallback for dead bridges.
+- `FoldStartupGate` (1500ms hold budget, seeded Duo opens
+  immediately). The package version takes the splash as a required
+  parameter: Sensecast's gate hardcodes its own symbol asset and
+  background, which do not belong in a generic package. Adopting
+  0.1.2 in Sensecast means passing its splash at the call site.
+- Flat pose with a missing division now splits, and `clippedDivision`
+  synthesises a centred 40pt band while the region report lags. The
+  "seconds on real hardware" lag is asserted in Sensecast code
+  comments, not hardware-verified; public claims stay sim-framed.
+- Deliberately not ported: the glance screen and its test, the radar
+  layout test, localizations, and the native `hw.machine` channel
+  itself (AppDelegate code). The package bridge calls the channel; the
+  app must answer it or override `machineIdentifier`. The default
+  channel name is Sensecast's (`com.weatherapp/device`) so Sensecast
+  adopts 0.1.2 with no native change; other apps pass their own name.
+- One-line hardening vs Sensecast: settled-verdict persistence uses
+  `.ignore()` instead of `.catchError((_) {})`, which would only
+  swallow the error on paper and could surface a type error on the
+  error path.
+- Not verified here: no Flutter SDK in this environment, so
+  `flutter analyze` and `flutter test` still need a run on Daniel's
+  Mac before publish, as with 0.1.1.

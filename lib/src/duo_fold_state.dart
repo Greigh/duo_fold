@@ -40,9 +40,10 @@ class DuoFoldState {
     this.divisionRegion,
     this.occlusionRegions = const [],
     this.isActiveRegions = false,
+    this.foldSettled = false,
   });
 
-  const DuoFoldState.unsupported()
+  const DuoFoldState.unsupported({this.foldSettled = false})
     : isDuo = false,
       hingeStatus = DuoHingeStatus.unknown,
       hingeAngleDeg = null,
@@ -70,6 +71,13 @@ class DuoFoldState {
   /// Raw isActive flag for diagnostics: regions lag the hinge about 1 s,
   /// so nothing gates on it.
   final bool isActiveRegions;
+
+  /// Transient stream metadata: true once the foldable bridge has answered
+  /// with a *settled* verdict (`supportLevel` != `unknown`). The seed that
+  /// a cached verdict or foldable machine id emits stays `false`: it is a
+  /// confident hint, not a hardware answer. Lifecycle state, deliberately
+  /// absent from `==`, `hashCode` and [layoutSignature].
+  final bool foldSettled;
 
   /// Whether a fold is in effect: posture-gated, never isActive-gated.
   bool get foldInEffect => hingeStatus == DuoHingeStatus.partiallyOpen;

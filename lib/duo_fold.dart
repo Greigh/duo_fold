@@ -10,3 +10,4 @@ export 'src/edge_rail_geometry.dart';
 export 'src/fold_aware_sheet.dart';
 export 'src/fold_layout.dart';
 export 'src/fold_split_view.dart';
+export 'src/fold_startup_gate.dart';
